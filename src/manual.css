@@ -1,0 +1,200 @@
+#connect-dialog, #send-dialog, .message-dialog{
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.3);
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 99999;
+}
+#connect-dialog .content-dialog-overlay, #send-dialog .send-dialog-overlay, .message-dialog .send-dialog-overlay{
+    z-index: 99999;
+    overflow-y: hidden;
+}
+#connect-dialog .content-dialog-content, #send-dialog .send-dialog-content, .message-dialog .send-dialog-content{
+    position: absolute;
+    left: 50%;
+    top: 45%;
+    transform: translateY(-50%)translateX(-50%);
+    z-index: 999999;
+    background: #ffffff;
+}
+#connect-dialog .content-dialog-content, .message-dialog .send-dialog-content{
+    width: 400px;
+    border-radius: 20px;
+}
+#send-dialog .send-dialog-content{
+    width: 500px;
+    border-radius: 5px;
+}
+.connect-dialog-header{
+    background: #E6E6E6;
+    border-radius: 20px 20px 0 0;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+.connect-dialog-header button{
+    border: none;
+    background: none;
+    padding: 0;
+}
+.connect-dialog-header button:hover{
+    cursor: pointer;
+}
+.connect-dialog-header button:first-child{
+    color: #007bff;
+    font-size: 13px;
+    font-weight: bolder;
+}
+.connect-dialog-header button:last-child{
+    font-size: 16px;
+    color: #3b3939;
+}
+.connect-dialog-body{
+    padding: 20px;
+    margin: 20px 10px;
+    border-radius: 0 0 20px 20px;
+}
+.connect-dialog-body .connection-info{
+    padding: 20px;
+    text-align: left;
+    border: 1px solid #fc3131;
+    border-radius: 10px;
+    color: #fc3131;
+    font-size: 16px;
+    font-weight: 500;
+}
+.connect-dialog-body .connection-info .manual-connection{
+    background: #2d3748;
+    border: none;
+    border-radius: 8px;
+    color: #f7fafc;
+    font-weight: bold;
+    font-size: 12px;
+    padding: 7px 10px;
+    margin-left: 5px;
+}
+.connect-dialog-body .connection-info .manual-connection:hover{
+    cursor: pointer;
+}
+.connect-dialog-body .wallet-app-info{
+    margin-top: 20px;
+    padding: 13px;
+    text-align: left;
+    border: 1px solid #2d3748;
+    border-radius: 10px;
+    color: #2d3748;
+    font-size: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+}
+.connect-dialog-body .wallet-app-info .wallet-app-logo img{
+    width: 50px;
+    border-radius: 50%;
+}
+
+.to-send-info{
+    display: flex;
+    justify-content: left;
+    align-items: center;
+}
+
+#current-wallet-send-logo{
+    width: 80px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.wallet-app-name-send{
+    font-size: 18px;
+    font-weight: bolder;
+}
+.send-tabs{
+    margin: 20px 0;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px;
+    border-bottom: 2px solid #ece7e7;
+}
+
+.send-tabs button{
+    background: none;
+    border: none;
+    color: #6c757d;
+    padding-bottom: 10px;
+}
+
+
+.send-tabs button:hover{
+    border-bottom: 2px solid #2d3748;
+    padding-bottom: 8px;
+    cursor: pointer;
+}
+
+@media screen and (max-width: 600px) {
+    #send-dialog .send-dialog-content{
+        width: 400px;
+    }
+}
+
+@media screen and (max-width: 500px) {
+    #connect-dialog .content-dialog-content, .message-dialog .send-dialog-content{
+        width: 350px;
+    }
+    .connect-dialog-body{
+        margin: 20px 0;
+    }
+    .connect-dialog-body .connection-info{
+        font-size: 15px;
+    }
+    .connect-dialog-body .connection-info .manual-connection{
+        font-size: 11px;
+    }
+    .connect-dialog-body .wallet-app-info{
+        font-size: 15px;
+    }
+    #send-dialog .send-dialog-content{
+        width: 380px;
+    }
+}
+
+
+@media screen and (max-width: 400px) {
+    #send-dialog .send-dialog-content{
+        width: 350px;
+    }
+}
+
+@media screen and (max-width: 380px) {
+    #connect-dialog .content-dialog-content, .message-dialog .send-dialog-content{
+        width: 300px;
+    }
+    .connect-dialog-body{
+        padding: 8px;
+        margin: 20px 0;
+    }
+    .connect-dialog-body .connection-info{
+        font-size: 13px;
+    }
+    .connect-dialog-body .connection-info .manual-connection{
+        font-size: 10px;
+    }
+    .connect-dialog-body .wallet-app-info{
+        font-size: 13px;
+    }
+    #send-dialog .send-dialog-content{
+        width: 300px;
+    }
+}
+
+@media screen and (max-width: 340px) {
+    #connect-dialog .content-dialog-content, .message-dialog .send-dialog-content{
+        width: 280px;
+    }
+    #send-dialog .send-dialog-content{
+        width: 280px;
+    }
+}

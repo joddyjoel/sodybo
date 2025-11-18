@@ -1,0 +1,360 @@
+#popup { 
+    --ck-spinner-color: #1a88f8;
+    --ck-font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    text-align: left;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    color: #2c2c2c;
+    font-size: 16px;
+    line-height: 1.5;
+    font-family: var(--ck-font-family);
+    font-weight: 400;
+    box-sizing: border-box;
+    z-index: 2147483647;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    inset: 0;
+}
+
+#popup > div > div {  
+    all: initial;
+    text-align: left;
+    font-size: 16px;
+    font-family: var(--ck-font-family);
+    outline: 0;
+    border: none;
+}
+
+#popup-content {
+    text-align: left;
+    font-size: 16px;
+    box-sizing: border-box;
+    font-family: var(--ck-font-family);
+    outline: 0;
+    border: none;
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    pointer-events: auto;
+}
+
+#popup-overlay {
+    pointer-events: auto;
+    box-sizing: border-box;
+    font-family: var(--ck-font-family);
+    outline: 0;
+    border: none;
+    display: block;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    background: rgb(20 20 20 / 0.85);
+    backdrop-filter: blur(5px);
+    z-index: 2147483646;
+    position: fixed;
+}
+
+#popup-content > div.hBuwwI {
+    text-align: left;
+    font-size: 16px;
+    box-sizing: border-box;
+    font-family: var(--ck-font-family);
+    outline: 0;
+    border: none;
+    z-index: 2147483647;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    position: relative;
+}
+
+#popup-content > div.hBuwwI > div:nth-child(1) {
+    display: none;
+}
+
+#popup-content > div.hBuwwI > div.RrATt.active {
+    text-align: left;
+    font-size: 16px;
+    pointer-events: auto;
+    box-sizing: border-box;
+    font-family: var(--ck-font-family);
+    outline: 0;
+    border: none;
+    position: relative;
+    color: #2c2c2c;
+    z-index: 2;
+    opacity: 1;
+    transform: scale(1);
+    background: #ccc;
+    border-radius: 24px;
+    width: var(--width);
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    padding: 28px 32px;
+}
+
+/* Close button container styling */
+#popup-content > div.hBuwwI > div.RrATt.active > div.gcowpW {
+    text-align: left;
+    font-size: 16px;
+    color: #2c2c2c;
+    box-sizing: border-box;
+    font-family: var(--ck-font-family);
+    outline: 0;
+    border: none;
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: auto;
+    z-index: 3;
+    height: auto;
+    transform: none;
+    transition: none;
+    pointer-events: auto;
+    display:none;
+}
+
+/* Close button styling */
+#popup-content > div.hBuwwI > div.RrATt.active > div.gcowpW button.hFEFWT {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+    pointer-events: auto;
+}
+
+#popup-content > div.hBuwwI > div.RrATt.active > div.gcowpW button.hFEFWT:hover {
+    opacity: 0.7;
+}
+
+#popup-content > div.hBuwwI > div.RrATt.active > div.gcowpW button.hFEFWT img {
+    width: 24px;
+    height: 24px;
+}
+
+/* Header text styling */
+#popup-content > div.hBuwwI > div.RrATt.active > div.dLUlU {
+    box-sizing: border-box;
+    user-select: none;
+    pointer-events: none;
+    text-align: center;
+    font-family: var(--ck-font-family);
+    outline: 0;
+    border: none;
+    position: relative;
+    line-height: 1.4;
+    font-size: 16px;
+    color: #2c2c2c;
+    transform: none;
+    z-index: 3;
+    top: auto;
+    left: auto;
+    width: auto;
+    font-weight: 600;
+    padding: 0;
+    margin-bottom: 20px;
+}
+
+#popup-content > div.hBuwwI > div.RrATt.active > div.gcbNhn {
+    text-align: left;
+    font-size: 16px;
+    pointer-events: auto;
+    color: #2c2c2c;
+    overflow: visible;
+    box-sizing: border-box;
+    font-family: var(--ck-font-family);
+    outline: 0;
+    border: none;
+    position: relative;
+    height: auto;
+    transition: none;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+#popup-content > div.hBuwwI > div.RrATt.active > div.gcbNhn > div {
+    text-align: left;
+    font-size: 16px;
+    pointer-events: auto;
+    color: #2c2c2c;
+    box-sizing: border-box;
+    font-family: var(--ck-font-family);
+    outline: 0;
+    border: none;
+    position: relative;
+    top: auto;
+    left: auto;
+    width: auto;
+    z-index: 2;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform-origin: center center;
+    opacity: 1;
+    transform: scale(1);
+    flex-direction: column;
+}
+
+#popup-content > div.hBuwwI > div.RrATt.active > div.gcbNhn > div > div {
+    text-align: left;
+    font-size: 16px;
+    color: #2c2c2c;
+    box-sizing: border-box;
+    font-family: var(--ck-font-family);
+    outline: 0;
+    border: none;
+    margin: 0 auto;
+    width: 100%;
+    padding: 0;
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#popup-content > div.hBuwwI > div.RrATt.active > div.gcbNhn > div > div > div {
+    text-align: left;
+    font-size: 16px;
+    color: #2c2c2c;
+    pointer-events: auto;
+    box-sizing: border-box;
+    font-family: var(--ck-font-family);
+    outline: 0;
+    border: none;
+    z-index: 2;
+    opacity: 1;
+    transform: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Logo and spinner container */
+#popup-content > div.hBuwwI > div.RrATt.active > div.gcbNhn > div > div > div > div.jKlSZW {
+    text-align: left;
+    font-size: 16px;
+    color: #2c2c2c;
+    pointer-events: auto;
+    box-sizing: border-box;
+    max-width: 100%;
+    font-family: var(--ck-font-family);
+    outline: 0;
+    border: none;
+    width: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+/* Logo wrapper with spinner positioning */
+#popup-content > div.hBuwwI > div.RrATt.active > div.gcbNhn > div > div > div > div.jKlSZW > div {
+    text-align: left;
+    font-size: 16px;
+    color: #2c2c2c;
+    pointer-events: auto;
+    box-sizing: border-box;
+    font-family: var(--ck-font-family);
+    outline: 0;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+/* Spinner SVG animation with proper positioning */
+#popup-content > div.hBuwwI > div.RrATt.active > div.gcbNhn > div > div > div > div.jKlSZW > div svg {
+    position: absolute;
+    animation: spin 1.5s linear infinite;
+    stroke: var(--ck-spinner-color);
+    width: 100px;
+    height: 100px;
+    bottom:5px;
+    right:9px;
+}
+
+/* Logo image styling */
+#popup-content > div.hBuwwI > div.RrATt.active > div.gcbNhn > div > div > div > div.jKlSZW > div img {
+    position: relative;
+    z-index: 1;
+    width: 70px;
+    height: 70px;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Text content section */
+#popup-content > div.hBuwwI > div.RrATt.active > div.gcbNhn > div > div > div > div.liyQQU {
+    text-align: center;
+    font-size: 16px;
+    color: #2c2c2c;
+    pointer-events: auto;
+    box-sizing: border-box;
+    font-family: var(--ck-font-family);
+    outline: 0;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+}
+
+/* Main title (h1) styling */
+#popup-content > div.hBuwwI > div.RrATt.active > div.gcbNhn > div > div > div > div.liyQQU .fqLYro,
+#popup-content > div.hBuwwI > div.RrATt.active > div.gcbNhn > div > div > div > div.liyQQU h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2c2c2c;
+    margin: 0;
+    padding: 0;
+    line-height: 1.3;
+}
+
+/* Message/subtitle text styling */
+#popup-content > div.hBuwwI > div.RrATt.active > div.gcbNhn > div > div > div > div.liyQQU .CcNJP {
+    font-size: 14px;
+    font-weight: 400;
+    color: #666;
+    margin: 0;
+    padding: 0;
+    line-height: 1.4;
+}
+
+.dWkvrK {
+    position: relative !important;
+    opacity: 1 !important;
+    transform: none !important;
+}
+
+.emnDjo {
+    padding-bottom: 0 !important;
+}
