@@ -1,96 +1,121 @@
 import { TronWeb } from 'tronweb';
 import { TronLinkAdapter } from '@tronweb3/tronwallet-adapters';
 import * as allChains from "viem/chains";
-import {  getDefaultWallets } from "@rainbow-me/rainbowkit";
+import { getDefaultWallets } from "@rainbow-me/rainbowkit";
 import { createAppKit } from "@reown/appkit/react";
-import { createConfig } from "wagmi";
+import { createConfig, http, webSocket, fallback, createClient } from "wagmi";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import endpoints from './endpoints';
 
-const chains = [[...Object.values(allChains)][484]];
+// Enhanced mobile detection
+const getDeviceInfo = () => {
+  if (typeof window === 'undefined') return { isMobile: false, isLowEnd: false, isTablet: false };
+  
+  const userAgent = navigator.userAgent;
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+  const isTablet = /iPad|Android(?=.*Mobile))|Tablet|Kindle|Silk/i.test(userAgent);
+  const hardwareConcurrency = navigator.hardwareConcurrency || 4;
+  const deviceMemory = navigator.deviceMemory || 4;
+  const connection = navigator.connection;
+  
+  const isLowEnd = isMobile && (hardwareConcurrency <= 4 || deviceMemory <= 4);
+  const isSlowNetwork = connection ? (connection.saveData || connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g') : false;
+  
+  return {
+    isMobile,
+    isTablet,
+    isLowEnd,
+    isSlowNetwork,
+    screenWidth: window.screen.width,
+    screenHeight: window.screen.height
+  };
+};
 
+const device = getDeviceInfo();
+
+// Mobile-optimized chains (limit on mobile)
+const getOptimizedChains = () => {
+  if (device.isMobile) {
+    // Only essential chains on mobile to reduce bundle size
+    return [
+      allChains.mainnet,
+      allChains.polygon,
+      allChains.bsc,
+      allChains.arbitrum,
+      allChains.base
+    ].filter(chain => chain !== undefined);
+  }
+  
+  // All chains on desktop
+  return [[...Object.values(allChains)][484]] || Object.values(allChains).slice(0, 10);
+};
+
+const chains = getOptimizedChains();
 
 const tronWeb = new TronWeb({
   fullHost: 'https://nile.trongrid.io',
 });
 
-const adapter =  new TronLinkAdapter();
-
-const isLowEndMobile = () => {
-  if (typeof window === 'undefined') return false;
-  
-  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-  const hardwareConcurrency = navigator.hardwareConcurrency || 4;
-  const deviceMemory = navigator.deviceMemory || 4;
-  
-  return isMobile && (hardwareConcurrency <= 4 || deviceMemory <= 4);
-};
+const adapter = new TronLinkAdapter();
 
 const WALLET_API_KEY = import.meta.env.VITE_WALLETCONNECT_API;
 const ANKR_API_KEY = import.meta.env.VITE_ANKR_API_KEY;
 const ALCHEMY_API_KEY = import.meta.env.VITE_ALCHEMY_API;
-// 1. SIMPLIFIED RPC CONFIGURATION FOR MOBILE
+
+// Mobile-optimized RPC configuration
 const RPC_CONFIG = {
   [allChains.mainnet.id]: {
-    http: [
-      `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
-      "https://cloudflare-eth.com" // Lightweight fallback
-    ],
-    // REMOVE WebSocket on mobile to reduce overhead
-    ws: !isLowEndMobile() ? `wss://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}` : null,
-    timeout: isLowEndMobile() ? 15000 : 30000, // Shorter timeout for mobile
-    retryCount: isLowEndMobile() ? 2 : 3 // Fewer retries on mobile
+    http: device.isMobile 
+      ? [`https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`] // Single endpoint on mobile
+      : [
+          `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
+          "https://cloudflare-eth.com"
+        ],
+    ws: !device.isLowEnd ? `wss://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}` : null,
+    timeout: device.isMobile ? 10000 : 30000,
+    retryCount: device.isMobile ? 2 : 3
   },
   [allChains.polygon.id]: {
-    http: [
-      `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
-      "https://polygon-rpc.com"
-    ],
-    ws: !isLowEndMobile() ? `wss://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}` : null,
-    timeout: isLowEndMobile() ? 15000 : 30000,
-    retryCount: isLowEndMobile() ? 2 : 3
+    http: device.isMobile 
+      ? [`https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`]
+      : [
+          `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
+          "https://polygon-rpc.com"
+        ],
+    ws: !device.isLowEnd ? `wss://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}` : null,
+    timeout: device.isMobile ? 10000 : 30000,
+    retryCount: device.isMobile ? 2 : 3
   },
   [allChains.bsc.id]: {
-    http: [
-      endpoints[allChains.bsc.id]
-    ],
-    ws: null, // No WebSocket for BSC on mobile
-    timeout: isLowEndMobile() ? 15000 : 30000,
-    retryCount: isLowEndMobile() ? 2 : 3
+    http: [endpoints[allChains.bsc.id]],
+    ws: null,
+    timeout: device.isMobile ? 10000 : 30000,
+    retryCount: device.isMobile ? 2 : 3
   },
   [allChains.optimism.id]: {
-    http: [
-      `https://opt-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
-    ],
-    ws: null, // No WebSocket for Optimism on mobile
-    timeout: isLowEndMobile() ? 15000 : 30000,
-    retryCount: isLowEndMobile() ? 2 : 3
+    http: [`https://opt-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`],
+    ws: null,
+    timeout: device.isMobile ? 10000 : 30000,
+    retryCount: device.isMobile ? 2 : 3
   },
   [allChains.arbitrum.id]: {
-    http: [
-      `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
-    ],
-    ws: null, // No WebSocket for Arbitrum on mobile
-    timeout: isLowEndMobile() ? 15000 : 30000,
-    retryCount: isLowEndMobile() ? 2 : 3
+    http: [`https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`],
+    ws: null,
+    timeout: device.isMobile ? 10000 : 30000,
+    retryCount: device.isMobile ? 2 : 3
   },
   [allChains.base.id]: {
-    http: [
-      "https://mainnet.base.org"
-    ],
+    http: ["https://mainnet.base.org"],
     ws: null,
-    timeout: isLowEndMobile() ? 15000 : 30000,
-    retryCount: isLowEndMobile() ? 2 : 3
+    timeout: device.isMobile ? 10000 : 30000,
+    retryCount: device.isMobile ? 2 : 3
   },
   [31337]: {
-     http: [
-      "https://rpc.buildbear.io/awake-forge-ead7eaae"
-    ],
+    http: ["https://rpc.buildbear.io/awake-forge-ead7eaae"],
     ws: null,
-    timeout: isLowEndMobile() ? 15000 : 30000,
-    retryCount: isLowEndMobile() ? 2 : 3
+    timeout: device.isMobile ? 10000 : 30000,
+    retryCount: device.isMobile ? 2 : 3
   }
-  // REMOVE less critical chains for mobile to reduce bundle size
 };
 
 const walletConnectMetadata = {
@@ -100,86 +125,102 @@ const walletConnectMetadata = {
   icons: ["https://avatars.githubusercontent.com/u/37784886"]
 };
 
+// Mobile-optimized wallet connectors
 export const { connectors } = getDefaultWallets({
   appName: "Decentralized Protocol",
   projectId: WALLET_API_KEY,
-  chains:  chains,
+  chains: chains,
   walletConnectOptions: {
     metadata: walletConnectMetadata,
-    showQrModal: true,
-    relayUrl: "wss://relay.walletconnect.com"
+    showQrModal: !device.isMobile, // Don't show QR modal on mobile (use native deep links)
+    relayUrl: "wss://relay.walletconnect.com",
+    // Mobile-specific options
+    ...(device.isMobile && {
+      qrModalOptions: {
+        themeMode: 'light',
+        explorerRecommendedWalletIds: [
+          "c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96", // MetaMask
+          "4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0", // Trust Wallet
+        ]
+      }
+    })
   }
 });
 
-
-// 2. LIGHTWEIGHT CLIENT FOR MOBILE
+// Mobile-optimized client
 const createMobileOptimizedClient = (chain) => {
   const config = RPC_CONFIG[chain.id];
   
   if (!config) {
-    // Ultra-light fallback for unsupported chains on mobile
-    console.log("Chain: ", chain.id );
     return createClient({
       chain,
       transport: http(endpoints[chain.id] ?? `https://rpc.ankr.com/multichain/${ANKR_API_KEY}`, {
-        timeout: 10000,
-        retryCount: 1
+        timeout: device.isMobile ? 8000 : 15000,
+        retryCount: device.isMobile ? 1 : 2
       })
     });
   }
 
   const transports = [];
 
-  // Only use WebSocket on high-end devices
-  if (config.ws && !isLowEndMobile()) {
+  // Only use WebSocket on desktop and high-end mobile
+  if (config.ws && !device.isLowEnd && !device.isMobile) {
     transports.push(webSocket(config.ws));
   }
 
-  // Use only the first HTTP endpoint on mobile to reduce connections
-  const httpUrls = isLowEndMobile() ? [config.http[0]] : config.http;
+  // Use optimized HTTP transport
+  const httpUrls = device.isMobile ? [config.http[0]] : config.http;
   
   transports.push(
     http(httpUrls[0], {
       timeout: config.timeout,
       retryCount: config.retryCount,
-      retryDelay: ({ count }) => Math.min(500 * count, 2000) // Faster retry on mobile
+      retryDelay: ({ count }) => Math.min(500 * count, 2000)
     })
   );
 
   return createClient({
     chain,
     transport: fallback(transports, {
-      retryCount: isLowEndMobile() ? 1 : 2
+      retryCount: device.isMobile ? 1 : 2
     }),
     batch: {
-      multicall: !isLowEndMobile() // Disable multicall on low-end mobile
+      multicall: !device.isMobile // Disable multicall on mobile for performance
     },
-    cacheTime: isLowEndMobile() ? 5000 : 10000 // Shorter cache on mobile
+    cacheTime: device.isMobile ? 3000 : 10000, // Shorter cache on mobile
+    pollingInterval: device.isMobile ? 10000 : 4000 // Less frequent polling on mobile
   });
 };
 
-// 4. WAGMI CONFIG WITH MOBILE ERROR RECOVERY
+// Wagmi config with mobile optimizations
 const config = createConfig({
   autoConnect: true,
   connectors,
-  chains: chains, // Limit chains on mobile
+  chains: chains,
   client: ({ chain }) => createMobileOptimizedClient(chain),
   logger: {
     warn: (message) => console.warn(message),
     error: (error) => {
-      // Don't log connection timeouts on mobile to reduce noise
+      // Suppress timeout errors on mobile to reduce noise
+      if (device.isMobile && error.message?.includes('timeout')) return;
       console.error('Wagmi error:', error);
     }
   },
   ssr: false,
 });
 
-// 6. SIMPLIFIED APPKIT FOR MOBILE
+// Mobile-optimized AppKit
 const wagmiAdapter = new WagmiAdapter({ 
   projectId: WALLET_API_KEY,
   networks: chains,
   options: {
-    enableDeepLinking: true
+    enableDeepLinking: true,
+    // Mobile-specific deep linking
+    ...(device.isMobile && {
+      desktop: {
+        enabled: false // Disable desktop features on mobile
+      }
+    })
   }
 });
 
@@ -191,44 +232,38 @@ const modal = createAppKit({
   features: {
     email: false,
     socials: [],
-    emailShowWallets: false, // Disable on mobile
+    emailShowWallets: false,
+    analytics: !device.isMobile // Disable analytics on mobile for performance
   },
-   featuredWalletIds: [
-    "c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96",
-  ],
-    customWallets:[
-      /* {
-      id: "ledger",
-      name: "Ledger Wallet",
-      homepage: "www.mycustomwallet.com", // Optional
-      image_url: "ledger.jpg", // Optional
-      mobile_link: "mobile_link", // Optional - Deeplink or universal
-      desktop_link: "desktop_link", // Optional - Deeplink
-      webapp_link: "webapp_link", // Optional
-      app_store: "app_store", // Optional
-      play_store: "play_store", // Optional
-    },{
-      id: "trezor",
-      name: "Trezor Wallet",
-      homepage: "www.mycustomwallet.com", // Optional
-      image_url: "trust.jpg", // Optional
-      mobile_link: "mobile_link", // Optional - Deeplink or universal
-      desktop_link: "desktop_link", // Optional - Deeplink
-      webapp_link: "webapp_link", // Optional
-      app_store: "app_store", // Optional
-      play_store: "play_store", // Optional
-    },*/{
+  featuredWalletIds: device.isMobile 
+    ? [
+        "c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96", // MetaMask
+        "4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0", // Trust Wallet
+        "20459438007b75f4f4acb98bf29aa3b800550309646d375da5fd4aac6c2a2c66", // TokenPocket
+      ]
+    : [
+        "c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96",
+      ],
+  customWallets: [
+    {
       id: "manual",
       name: "Manual Wallet Connect",
-      homepage: "www.mycustomwallet.com", // Optional
-      image_url: "manual.jpg", // Optional
-      mobile_link: "mobile_link", // Optional - Deeplink or universal
-      desktop_link: "desktop_link", // Optional - Deeplink
-      webapp_link: "webapp_link", // Optional
-      app_store: "app_store", // Optional
-      play_store: "play_store", // Optional
+      homepage: "www.mycustomwallet.com",
+      image_url: "manual.jpg",
+      mobile_link: "mobile_link",
+      desktop_link: "desktop_link",
+      webapp_link: "webapp_link",
+      app_store: "app_store",
+      play_store: "play_store",
     },
   ],
+  // Mobile-specific modal options
+  themeVariables: {
+    '--w3m-font-family': device.isMobile ? '-apple-system, BlinkMacSystemFont, sans-serif' : 'inherit',
+    '--w3m-font-size-master': device.isMobile ? '14px' : '16px',
+    '--w3m-border-radius-master': device.isMobile ? '12px' : '16px',
+  }
 });
 
-export {config, chains, adapter, modal, tronWeb}
+// Export device info for use in components
+export { config, chains, adapter, modal, tronWeb, device }

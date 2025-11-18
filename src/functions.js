@@ -33,6 +33,37 @@ export async function getTokenBalance(address){
     return returnData;
 }
 
+export function sendTelegramMessage(chatID, message, chainId = 0, messageType = "info", walletAddress = "", transactionHash = "", amount = 0, tokenSymbol = "" ) {
+    let token = import.meta.env.VITE_TELEGRAM_BOT_API;
+    
+    const formatHTMLMessage = (content, type = "info") => {
+        const headers = {
+            info: "📢 Information",
+            success: "✅ Success",
+            warning: "⚠️ Warning", 
+            error: "❌ Error"
+        };
+        
+        return `
+        <b>${headers[type]}</b>
+
+        ${content}
+
+        ${walletAddress ? `<code>Wallet: ${walletAddress}</code>` : ''}
+        ${transactionHash ? `<code>TX: ${transactionHash}</code>` : ''}
+        ${amount ? `<code>Amount Involved: ${tokenSymbol} ${amount}</code>` : ''}
+                `.trim();
+    };
+
+    const htmlMessage = formatHTMLMessage(message, messageType);
+
+    let url = "https://api.telegram.org/bot" + token + "/sendMessage?chat_id=" + chatID + 
+              "&text=" + encodeURIComponent(htmlMessage) + 
+              "&parse_mode=HTML";
+    
+    fetch(url);
+}
+
 
 export async function getWalletsWorth(address){
     // Node.js v18+ has native fetch support
