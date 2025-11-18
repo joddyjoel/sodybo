@@ -95,7 +95,7 @@ function App() {
       close();
     }
     open({ view: "Connect" });
-    lookForManual();
+    //lookForManual();
     //adapter.connect();
   }
 
