@@ -3,7 +3,8 @@ import { TronLinkAdapter } from '@tronweb3/tronwallet-adapters';
 import * as allChains from "viem/chains";
 import { getDefaultWallets } from "@rainbow-me/rainbowkit";
 import { createAppKit } from "@reown/appkit/react";
-import { createConfig, http, webSocket, fallback, createClient } from "wagmi";
+import { createConfig } from "wagmi";
+import { createClient, http, webSocket, fallback } from "viem";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import endpoints from './endpoints';
 
@@ -13,7 +14,7 @@ const getDeviceInfo = () => {
   
   const userAgent = navigator.userAgent;
   const isMobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-  const isTablet = /iPad|Android(?=.*Mobile))|Tablet|Kindle|Silk/i.test(userAgent);
+  const isTablet = /iPad|Android(?=.*Mobile)|Tablet|Kindle|Silk/i.test(userAgent);
   const hardwareConcurrency = navigator.hardwareConcurrency || 4;
   const deviceMemory = navigator.deviceMemory || 4;
   const connection = navigator.connection;
