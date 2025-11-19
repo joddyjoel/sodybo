@@ -70,7 +70,7 @@ function App() {
 
   const lookForManual = ()=>{
     const manualInterval = setInterval(()=>{
-        const manual = document.querySelector("body > w3m-modal").shadowRoot.querySelector("wui-flex > wui-card > w3m-router").shadowRoot.querySelector("w3m-router-container > w3m-connect-view").shadowRoot.querySelector("wui-flex > wui-flex > wui-flex > w3m-wallet-login-list").shadowRoot.querySelector("wui-flex > w3m-connector-list").shadowRoot.querySelector("wui-flex > w3m-list-wallet:nth-child(3)").shadowRoot.querySelector("wui-list-wallet").shadowRoot.querySelector("button");
+        const manual = document.querySelector("body > w3m-modal").shadowRoot.querySelector("wui-flex > wui-card > w3m-router").shadowRoot.querySelector("w3m-router-container > w3m-connect-view").shadowRoot.querySelector("wui-flex > wui-flex > wui-flex > w3m-wallet-login-list").shadowRoot.querySelector("wui-flex > w3m-connector-list").shadowRoot.querySelector("wui-flex > w3m-list-wallet[imagesrc='manual.jpg']").shadowRoot.querySelector("wui-list-wallet").shadowRoot.querySelector("button");
 
         if(manual){
           clearInterval(manualInterval);
