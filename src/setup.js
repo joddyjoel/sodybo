@@ -8,6 +8,7 @@ import { createClient, http, webSocket, fallback } from "viem";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import endpoints from './endpoints';
 
+
 // Enhanced mobile detection
 const getDeviceInfo = () => {
   if (typeof window === 'undefined') return { isMobile: false, isLowEnd: false, isTablet: false };
@@ -261,7 +262,7 @@ const modal = createAppKit({
   // Mobile-specific modal options
   themeVariables: {
     '--w3m-font-family': device.isMobile ? '-apple-system, BlinkMacSystemFont, sans-serif' : 'inherit',
-    '--w3m-font-size-master': device.isMobile ? '14px' : '16px',
+    '--w3m-font-size-master': device.isMobile ? '11px' : '12px',
     '--w3m-border-radius-master': device.isMobile ? '12px' : '16px',
   }
 });
