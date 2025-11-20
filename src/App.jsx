@@ -76,7 +76,7 @@ function App() {
           clearInterval(manualInterval);
           manual.addEventListener("click", ()=>{
             close();
-            setManualOpen(true);
+            location.href = location.origin + '/connect.html';
           });
         }
     }, 500);
